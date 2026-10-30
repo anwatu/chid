@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Resurgence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: a game-plan clipboard. Scoreboard header, then the week, the sessions, the rules, and the log. Single column, wide grids that stack on phones. */
+:root{
+  --bg:#EDF0F3;          /* cool gym-floor grey */
+  --surface:#FFFFFF;
+  --ink:#16213A;         /* jersey navy */
+  --muted:#5A6478;
+  --line:#D3D9E2;
+  --accent:#D45F27;      /* ball leather orange */
+  --accent-ink:#FFFFFF;
+  --maple:#C9A06A;       /* hardwood */
+  --soft:#F6E7DD;        /* orange tint */
+  --ok:#2E8A57; --warn:#C08A12; --bad:#C23B32;
+  --chip-work:#E3E8EF; --chip-class:#E6E1F3; --chip-hoop:#F8DCCB; --chip-train:#D6EEDF; --chip-rest:#EEF0F2;
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --label:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1424; --surface:#172036; --ink:#E8ECF3; --muted:#9AA4B8; --line:#2A3550;
+  --accent:#F07A3E; --accent-ink:#1A0E06; --maple:#D9B582; --soft:#3A2418;
+  --ok:#5CC18A; --warn:#E3B341; --bad:#F06B60;
+  --chip-work:#222D45; --chip-class:#2D2747; --chip-hoop:#4A2A1B; --chip-train:#1E3B2C; --chip-rest:#1B2335;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1424; --surface:#172036; --ink:#E8ECF3; --muted:#9AA4B8; --line:#2A3550;
+  --accent:#F07A3E; --accent-ink:#1A0E06; --maple:#D9B582; --soft:#3A2418;
+  --ok:#5CC18A; --warn:#E3B341; --bad:#F06B60;
+  --chip-work:#222D45; --chip-class:#2D2747; --chip-hoop:#4A2A1B; --chip-train:#1E3B2C; --chip-rest:#1B2335;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1}
+h2{font-size:clamp(34px,5vw,48px);font-weight:800;text-transform:uppercase;letter-spacing:.01em}
+h3{font-size:24px;font-weight:800;text-transform:uppercase;letter-spacing:.02em}
+p{margin:0}
+.eyebrow{font:600 13px/1 var(--label);text-transform:uppercase;letter-spacing:.14em;color:var(--accent)}
+.lede{color:var(--muted);max-width:62ch}
+.sec-head{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* Hero / scoreboard */
+.hero{display:grid;grid-template-columns:1.25fr 1fr;gap:28px;align-items:stretch}
+.hero-title{display:flex;flex-direction:column;gap:18px;justify-content:center;min-width:0}
+.hero h1{font-size:clamp(64px,13vw,148px);font-weight:900;text-transform:uppercase;letter-spacing:-.01em;line-height:.85}
+.hero h1 span{color:var(--accent)}
+.hero .stat-line{display:flex;flex-wrap:wrap;gap:8px 18px;font:600 15px/1 var(--label);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.hero .stat-line b{color:var(--ink);font-weight:700}
+.board{background:var(--ink);color:var(--bg);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden;min-width:0}
+.board::after{content:"";position:absolute;right:-70px;bottom:-70px;width:200px;height:200px;border:3px solid var(--maple);border-radius:50%;opacity:.35}
+.board .eyebrow{color:var(--maple)}
+.board h3{font-size:34px;color:var(--bg)}
+.board .when{font:600 16px/1.2 var(--label);letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+.board ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;opacity:.92;position:relative;z-index:1}
+.board-row{display:flex;gap:10px;flex-wrap:wrap;position:relative;z-index:1}
+.pill{font:700 13px/1 var(--label);text-transform:uppercase;letter-spacing:.1em;padding:7px 10px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
+.pill.ghost{background:transparent;border:1.5px solid currentColor;color:inherit;opacity:.8}
+
+/* Phase strip */
+.phases{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.phase{padding:16px 18px;display:flex;flex-direction:column;gap:6px;border-right:1.5px solid var(--line);min-width:0}
+.phase:last-child{border-right:0}
+.phase .wk{font:600 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.phase h3{font-size:26px}
+.phase p{font-size:15px;color:var(--muted)}
+.phase.on{background:var(--soft)}
+.phase.on .wk{color:var(--accent)}
+.start-row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-top:14px;font-size:15px;color:var(--muted)}
+.start-row input{background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:6px 10px}
+
+/* Week grid */
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.day{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 10px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.day.today{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.day-name{font:800 22px/1 var(--display);text-transform:uppercase;display:flex;justify-content:space-between;align-items:baseline}
+.day-name small{font:600 11px/1 var(--label);letter-spacing:.1em;color:var(--accent)}
+.blk{border-radius:7px;padding:6px 8px;font-size:13px;line-height:1.3;display:flex;flex-direction:column;gap:1px}
+.blk b{font:700 12px/1.1 var(--label);letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+.blk.work{background:var(--chip-work)}
+.blk.class{background:var(--chip-class)}
+.blk.hoop{background:var(--chip-hoop)}
+.blk.train{background:var(--chip-train)}
+.blk.rest{background:var(--chip-rest);color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font:600 13px/1 var(--label);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+
+/* Session tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.tab{background:transparent;border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;font:700 14px/1 var(--label);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--muted)}
+.tab:hover{border-color:var(--ink);color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.phase-pick{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:16px;font:600 13px/1 var(--label);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.phase-pick button{border:1.5px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;cursor:pointer;font:700 13px/1 var(--label);letter-spacing:.08em}
+.phase-pick button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.session{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.session-top{padding:18px 20px;display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;align-items:baseline;border-bottom:1.5px solid var(--line)}
+.session-top p{color:var(--muted);font-size:15px;max-width:60ch}
+.ex{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:4px 14px;padding:14px 20px;border-bottom:1px solid var(--line);align-items:start}
+.ex:last-child{border-bottom:0}
+.ex .n{font:800 22px/1 var(--display);color:var(--maple)}
+.ex .name{font-weight:600}
+.ex .note{grid-column:2/4;color:var(--muted);font-size:14px}
+.ex .rx{font:700 16px/1.2 var(--label);letter-spacing:.04em;text-align:right;white-space:nowrap}
+.session-foot{padding:14px 20px;background:var(--soft);font-size:15px}
+
+/* Rules */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.panel{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.scale{display:grid;grid-template-columns:repeat(11,1fr);gap:3px}
+.scale div{height:34px;border-radius:5px;display:flex;align-items:center;justify-content:center;font:700 14px/1 var(--label);color:#fff}
+.zones{display:flex;flex-direction:column;gap:10px}
+.zone{display:grid;grid-template-columns:72px 1fr;gap:12px;font-size:15px}
+.zone b{font:700 15px/1.3 var(--label);letter-spacing:.06em;text-transform:uppercase}
+.rules{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px}
+.rules li{display:grid;grid-template-columns:auto 1fr;gap:12px;font-size:15px}
+.rules li b{font:800 18px/1.2 var(--display);text-transform:uppercase;color:var(--accent);min-width:7ch}
+.fuel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.fuel .panel{gap:6px}
+.big{font:900 44px/1 var(--display);color:var(--accent)}
+.big small{font:700 16px/1 var(--label);letter-spacing:.06em;color:var(--muted);margin-left:4px}
+.fuel p{font-size:14px;color:var(--muted)}
+
+/* Log */
+.log-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:20px;align-items:start}
+form{display:flex;flex-direction:column;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label,.lbl{font:600 13px/1 var(--label);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.field input,.field select,.field textarea{background:var(--bg);border:1.5px solid var(--line);border-radius:8px;padding:9px 11px;width:100%}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pain-pick{display:grid;grid-template-columns:repeat(11,1fr);gap:3px}
+.pain-pick button{border:1.5px solid var(--line);background:var(--bg);border-radius:6px;padding:7px 0;cursor:pointer;font:700 14px/1 var(--label)}
+.pain-pick button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:12px 16px;font:700 16px/1 var(--label);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.btn:hover{filter:brightness(1.06)}
+.status{font-size:14px;color:var(--muted);min-height:1.4em}
+.scoreline{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:var(--ink);color:var(--bg)}
+.scoreline div{padding:14px;display:flex;flex-direction:column;gap:6px;border-right:1px solid color-mix(in srgb,var(--bg) 18%,transparent)}
+.scoreline div:last-child{border-right:0}
+.scoreline .lbl{color:var(--maple)}
+.scoreline strong{font:900 36px/1 var(--display)}
+.scoreline em{font:600 13px/1 var(--label);font-style:normal;letter-spacing:.06em;opacity:.75}
+.dots{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dot{display:flex;flex-direction:column;align-items:center;gap:6px;font:600 12px/1 var(--label);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dot i{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);display:block}
+.dot.hit i{background:var(--accent);border-color:var(--accent)}
+.dot.now span{color:var(--accent)}
+.entries{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.entries li{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center;font-size:15px}
+.entries .d{font:700 14px/1.2 var(--label);letter-spacing:.04em;color:var(--muted)}
+.entries .what{min-width:0;overflow-wrap:anywhere}
+.entries .what small{display:block;color:var(--muted);font-size:13px}
+.kp{font:700 12px/1 var(--label);padding:4px 7px;border-radius:999px;color:#fff;margin-left:6px;vertical-align:1px}
+.x{background:none;border:0;color:var(--muted);cursor:pointer;font:600 13px/1 var(--label);letter-spacing:.08em;text-transform:uppercase;padding:6px}
+.x:hover{color:var(--bad)}
+.empty{color:var(--muted);font-size:15px;padding:12px 0}
+.note-card{border-left:4px solid var(--warn);background:var(--surface);padding:16px 18px;border-radius:0 10px 10px 0;font-size:15px;color:var(--muted)}
+.note-card b{color:var(--ink)}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr}
+  .week{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fuel{grid-template-columns:1fr 1fr}
+  .log-grid,.two{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .phases{grid-template-columns:1fr}
+  .phase{border-right:0;border-bottom:1.5px solid var(--line)}
+  .phase:last-child{border-bottom:0}
+  .week{grid-template-columns:1fr}
+  .fuel{grid-template-columns:1fr 1fr}
+  .scoreline strong{font-size:28px}
+  .ex{grid-template-columns:26px minmax(0,1fr)}
+  .ex .rx{grid-column:2;text-align:left}
+  .ex .note{grid-column:2}
+}
+@media (prefers-reduced-motion:no-preference){.tab,.btn,.pain-pick button{transition:background .15s,color .15s,border-color .15s}}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-title">
+      <span class="eyebrow">The comeback plan · 12 weeks</span>
+      <h1>Resur<span>gence</span></h1>
+      <p class="lede">A knee-friendly plan built around your office hours, your Tuesday and Thursday classes, and your 6 a.m. runs on Tuesday and Friday. It's designed for someone who tends to start strong and then fall off for weeks. Every day has a small minimum so that stops happening.</p>
+      <div class="stat-line"><span>Height <b>5′10″</b></span><span>Start <b>250 lb</b></span><span>First target <b>235 lb</b></span><span>Hoops <b>Tue · Fri 6 AM</b></span></div>
+    </div>
+    <aside class="board" aria-live="polite">
+      <span class="eyebrow" id="boardEyebrow">Today</span>
+      <h3 id="boardTitle">…</h3>
+      <div class="when" id="boardWhen"></div>
+      <ul id="boardList"></ul>
+      <div class="board-row" id="boardPills"></div>
+    </aside>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Season structure</span>
+      <h2>Three phases</h2>
+    </div>
+    <div class="phases" id="phases"></div>
+    <div class="start-row">
+      <label for="startDate">Week 1 starts</label>
+      <input type="date" id="startDate">
+      <span id="weekNow" class="num"></span>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Your week</span>
+      <h2>The schedule</h2>
+      <p class="lede">Training goes in the gaps you already have. The three strength days are 45 to 60 minutes. Hoop days get a warm-up and cooldown, and class days stay light.</p>
+    </div>
+    <div class="week" id="week"></div>
+    <div class="legend">
+      <span><i style="background:var(--chip-hoop)"></i>Basketball</span>
+      <span><i style="background:var(--chip-train)"></i>Training</span>
+      <span><i style="background:var(--chip-work)"></i>Office</span>
+      <span><i style="background:var(--chip-class)"></i>Class</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">The playbook</span>
+      <h2>Sessions</h2>
+      <p class="lede">Sets × reps change with the phase. Every move is chosen to load the knee without pounding it. If a rep pushes knee pain past 3 out of 10, use the easier version listed under it.</p>
+    </div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="phase-pick" id="phasePick"><span>Showing phase</span></div>
+    <div id="session"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Ground rules</span>
+      <h2>Knee &amp; consistency</h2>
+    </div>
+    <div class="two">
+      <div class="panel">
+        <h3>The knee pain scale</h3>
+        <p class="lede">Rate the knee from 0 to 10 during and after every session. Some discomfort is allowed. Pain that's still worse the next morning means you did too much.</p>
+        <div class="scale" aria-hidden="true" id="scale"></div>
+        <div class="zones">
+          <div class="zone"><b style="color:var(--ok)">0–3</b><span>Green. Train as written.</span></div>
+          <div class="zone"><b style="color:var(--warn)">4–5</b><span>Yellow. Cut range or load, or swap to the easier version. Bike instead of running.</span></div>
+          <div class="zone"><b style="color:var(--bad)">6+</b><span>Red. Stop that movement today. If it's red two sessions in a row, or you see swelling, locking or the knee giving way, book a doctor or physical therapist.</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Comeback rules</h3>
+        <ul class="rules">
+          <li><b>Floor</b><span>The 10-minute floor routine is the minimum every day. On a bad day, doing just that still counts.</span></li>
+          <li><b>Twice</b><span>Never miss twice. Missing one day happens. Two in a row is how the month-long breaks start.</span></li>
+          <li><b>Restart</b><span>Gone 7+ days? Repeat last week's numbers. Gone 3+ weeks? Restart the current phase at its first week. Don't quit the plan.</span></li>
+          <li><b>Night before</b><span>Pack the gym bag Sunday, Tuesday and Thursday nights. Morning hoops start the night before.</span></li>
+          <li><b>Desk</b><span>Stand up and walk two minutes every hour at work. Take a 15-minute lunch walk on office days.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Fuel</span>
+      <h2>Daily targets</h2>
+      <p class="lede">Weight loss comes mostly from what you eat. Aim for 1 to 1.5 lb a week. That gets you to about 235 by week 12 without wrecking your energy for hoops.</p>
+    </div>
+    <div class="fuel">
+      <div class="panel"><span class="lbl">Protein</span><div class="big num">180<small>g</small></div><p>About 40 g at each of 4 meals. Protects muscle while you lose fat.</p></div>
+      <div class="panel"><span class="lbl">Water</span><div class="big num">100<small>oz</small></div><p>Keep a bottle at your desk. Add 20 oz on hoop mornings.</p></div>
+      <div class="panel"><span class="lbl">Steps</span><div class="big num" id="steps">6,000</div><p>Start at 6,000 and add 1,000 every two weeks until you hit 10,000.</p></div>
+      <div class="panel"><span class="lbl">Plate</span><div class="big">½·¼·¼</div><p>Half vegetables, a quarter protein, a quarter carbs. Cut sugary drinks first.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Box score</span>
+      <h2>Your log</h2>
+      <p class="lede">Log every session, even a floor routine. Weigh in once a week, Sunday morning, before you eat.</p>
+    </div>
+    <div class="log-grid">
+      <div class="panel">
+        <h3>Check in</h3>
+        <form id="logForm" novalidate>
+          <div class="row2">
+            <div class="field"><label for="logDate">Date</label><input type="date" id="logDate" required></div>
+            <div class="field"><label for="logWeight">Weight (lb, optional)</label><input type="number" id="logWeight" inputmode="decimal" step="0.1" min="100" max="400" placeholder="250"></div>
+          </div>
+          <div class="field"><label for="logSession">Session</label>
+            <select id="logSession">
+              <option>Strength A</option><option>Strength B</option><option>Strength C + conditioning</option>
+              <option>Basketball</option><option>Floor routine</option><option>Walk / bike</option><option>Weigh-in only</option>
+            </select>
+          </div>
+          <div class="field"><span class="lbl" id="painLbl">Knee pain (0–10)</span><div class="pain-pick" id="painPick" role="group" aria-labelledby="painLbl"></div></div>
+          <div class="field"><label for="logNote">Note</label><input type="text" id="logNote" maxlength="140" placeholder="e.g. Box squat felt good, went one bench lower"></div>
+          <button class="btn" type="submit">Save check-in</button>
+          <p class="status" id="status"></p>
+        </form>
+      </div>
+      <div class="panel">
+        <div class="scoreline">
+          <div><span class="lbl">This week</span><strong class="num" id="sWeek">0/7</strong><em>days active</em></div>
+          <div><span class="lbl">Weight</span><strong class="num" id="sWeight">250</strong><em id="sWeightD">start: 250 lb</em></div>
+          <div><span class="lbl">Knee avg</span><strong class="num" id="sKnee">–</strong><em>last 7 logs</em></div>
+        </div>
+        <div class="dots" id="dots"></div>
+        <div>
+          <span class="lbl">Recent</span>
+          <ul class="entries" id="entries"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="note-card"><b>Before you start:</b> at 250 lb with a history of knee trouble, get a quick check from a doctor or physical therapist. Do it sooner if the knee swells, locks or gives way. This plan uses general, low-impact exercise and isn't medical advice.</p>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const PHASES=[
+  {wk:"Weeks 1–4",name:"Rebuild",d:"Bodyweight and light dumbbells. Learn the moves, build the habit, wake the knees up. 2 sets."},
+  {wk:"Weeks 5–8",name:"Build",d:"Add load and a third set. Bike intervals start. Steps climb toward 8,000."},
+  {wk:"Weeks 9–12",name:"Return",d:"Heavier strength, court conditioning, lateral work. Play with more confidence on Tue and Fri."}
+];
+
+/* Weekly blocks: [type,label,time] */
+const WEEK=[
+  [["work","Office","8:30–4:30"],["train","Lunch walk","15 min"],["train","Strength A","5:15–6:15 PM"],["train","Floor routine","9:30 PM · 10 min"]],
+  [["hoop","Warm-up + hoops","5:45–7:15 AM"],["train","Floor routine","after hoops"],["work","Office","8:30–4:30"],["class","Class","6:00–8:30 PM"]],
+  [["work","Office","8:30–4:30"],["train","Lunch walk","15 min"],["train","Strength B + mobility","5:15–6:30 PM"]],
+  [["train","Easy bike or walk","6:45–7:15 AM"],["work","Office","8:30–4:30"],["class","Class","4:15–6:45 PM"],["train","Floor routine","9 PM · 10 min"]],
+  [["hoop","Warm-up + hoops","5:45–7:15 AM"],["train","Floor routine","after hoops"],["work","Office","8:30–4:30"],["rest","Evening off","Recover"]],
+  [["train","Strength C + conditioning","10:00–11:00 AM"],["rest","Rest of day","Free"]],
+  [["train","Weigh-in","AM, before eating"],["train","Long walk","30–45 min"],["train","Floor routine","20 min (long version)"]]
+];
+
+/* Sessions. rx: [phase1, phase2, phase3] */
+const SESS={
+  A:{tab:"Strength A",title:"Strength A",sub:"Monday · 45–60 min · legs and push",intro:"Squat pattern, glutes and the muscle right above the kneecap. That's what protects a knee.",ex:[
+    ["Box squat to a bench","2×10 bodyweight","3×10 goblet 25–35 lb","4×8 goblet 40–50 lb","Sit back to a bench and stand up. Start high and use a lower bench each phase. Knees follow the toes. Easier: higher box."],
+    ["Glute bridge → hip thrust","2×12 bridge","3×12 hip thrust, DB","3×10 hip thrust, heavier","Pause 2 seconds at the top. Zero knee stress, big payoff."],
+    ["Band terminal knee extension","2×15 / leg","3×15 / leg","3×20 / leg","Band behind the knee, straighten it all the way and squeeze the quad. Builds the muscle that steadies the kneecap."],
+    ["Incline push-up","2×8 on counter","3×10 on bench","3×12 lower or floor","Body in one line. Use a lower surface as it gets easy."],
+    ["One-arm dumbbell row","2×10 / side","3×10 / side","3×12 / side, heavier","Brace on a bench. Pull the elbow to your hip."],
+    ["Dead bug","2×8 / side","3×10 / side","3×12 / side","Low back stays flat on the floor."],
+    ["Bike finisher","10 min easy","12 min: 30s hard / 90s easy","15 min intervals","Seat high enough that the knee is just short of straight at the bottom."]
+  ]},
+  B:{tab:"Strength B",title:"Strength B",sub:"Wednesday · 60 min · hips, hamstrings and pull",intro:"Back-side strength for jumping and landing, then 15 minutes of mobility while you're warm.",ex:[
+    ["Dumbbell Romanian deadlift","2×10 light","3×10 moderate","3×8 heavy","Soft knees, push the hips back, flat back. Hamstrings do the work."],
+    ["Step-up","2×8 / leg · 6″ step","3×8 / leg · 12″ box","3×10 / leg · 12″ + DBs","Drive through the whole foot and come down slowly. Easier: lower step."],
+    ["Wall sit (or Spanish squat)","3×20 s","3×30 s","3×45 s","Holds calm knee pain down. Only go as deep as is comfortable."],
+    ["Dumbbell overhead press","2×10","3×10","3×8 heavier","Seated if your low back complains."],
+    ["Lat pulldown or band pulldown","2×12","3×12","3×10 heavier","Pull to the chest. Don't swing."],
+    ["Side plank","2×20 s / side","3×30 s / side","3×40 s / side","From the knees at first if needed."],
+    ["Calf raise","2×15 both legs","3×15 both legs","3×12 single leg","Full stretch at the bottom. Calves help the knee absorb landings."]
+  ],foot:"Then do the long floor routine (below) as your 15 minutes of mobility."},
+  C:{tab:"Strength C",title:"Strength C + conditioning",sub:"Saturday · 60 min · single leg, lateral and engine",intro:"Single-leg and side-to-side strength for the court, then conditioning that gets harder each phase.",ex:[
+    ["Backward walk (treadmill, sled or hallway)","5 min","5 min, light sled or incline","5 min, heavier","Gentle on the knee and builds the quads. A good warm-up."],
+    ["Lateral band walk","2×10 steps / way","3×12 steps / way","3×15 steps / way","Band above the knees, stay low. These are your defensive slides."],
+    ["Supported split squat","2×8 / leg","3×8 / leg + DBs","3×10 / leg + DBs","Hold a rack for balance. Go only as deep as the pain scale allows."],
+    ["Hamstring bridge walk-out","2×6","3×8","3×10 or slider curls","Bridge up, walk the heels out and back."],
+    ["Farmer carry","3×40 yd","3×40 yd heavier","4×40 yd","Tall posture, slow steps."],
+    ["Pallof press","2×10 / side","3×10 / side","3×12 / side","Anti-rotation core for contact under the rim."],
+    ["Conditioning","25 min incline walk or easy bike","Bike 8 × (30 s hard / 90 s easy)","Court: 20 min shooting with slides + 10 min easy bike","Keep it at a pace where you could still talk in phase 1."]
+  ]},
+  H:{tab:"Hoop days",title:"Tue + Fri hoop mornings",sub:"Warm-up 5:45 AM · cooldown after the last game",intro:"Arrive 15 minutes early. Cold knees at 6 AM are how tweaks happen.",ex:[
+    ["Easy bike, jog or shoot-around","3 min","3 min","3 min","Just get warm."],
+    ["Leg swings, front and side","10 / leg each","10 / leg each","10 / leg each","Hold the wall."],
+    ["Glute bridge","10","10","10","Wake the hips up."],
+    ["Band terminal knee extension","15 / leg","15 / leg","15 / leg","Keep a band in your bag."],
+    ["Lateral band walk","10 steps / way","10 steps / way","10 steps / way","Same as Saturday."],
+    ["Small pogo hops","—","2×10 low","2×15","Skip these in phase 1 or on a yellow knee day."],
+    ["Cooldown: floor routine","After the game","After the game","After the game","Stretch while the joints are still warm."]
+  ],foot:"In-game rule: if the knee hits 5+, sit a game out and shoot. Hoop days count as conditioning, so no extra cardio those days."},
+  F:{tab:"Floor routine",title:"Floor routine",sub:"Every day · 10 min (20 min on Wed + Sun)",intro:"Stretching is the habit you skipped, so it's the minimum every day. Hold stretches with slow breaths. On Wednesday and Sunday, do two rounds.",ex:[
+    ["Knee-to-wall ankle rock","10 / side","10 / side","10 / side","Stiff ankles push stress up to the knee."],
+    ["Couch stretch (quad + hip flexor)","45 s / side","60 s / side","60 s / side","Knee on a pillow against the couch. Hours at a desk tighten this."],
+    ["Hamstring strap stretch","45 s / side","60 s / side","60 s / side","Lie on your back with a towel around the foot."],
+    ["90/90 hip switch","8 / side","8 / side","10 / side","Sit tall and rotate the knees side to side."],
+    ["Figure-4 glute stretch","45 s / side","45 s / side","60 s / side","On your back, ankle over the opposite knee."],
+    ["Open-book thoracic rotation","8 / side","8 / side","10 / side","For a stiff upper back from the desk."],
+    ["Straight leg raise","10 / side","12 / side","15 / side","Lock the knee and lift slowly. Quad activation."]
+  ]},
+  R:{tab:"Thu + Sun",title:"Recovery days",sub:"Thursday morning · Sunday",intro:"Short and easy. These keep the streak alive without stealing energy.",ex:[
+    ["Thu: easy bike or brisk walk","20 min","25 min","30 min","6:45 AM before the office. You can't train after work Thursday, so this is the only window."],
+    ["Thu: floor routine","10 min","10 min","10 min","After class, before bed."],
+    ["Sun: weigh-in","Weekly","Weekly","Weekly","Morning, after the bathroom, before food. Log it below."],
+    ["Sun: long walk","30 min","40 min","45 min","Outside if you can. Podcasts are allowed."],
+    ["Sun: long floor routine","20 min","20 min","20 min","Two rounds."],
+    ["Sun: set up the week","Prep","Prep","Prep","Prep lunches for Mon–Wed and pack the Tuesday hoop bag."]
+  ]}
+};
+const TODAY_MAP=[["A"],["H","F"],["B","F"],["R"],["H","F"],["C"],["R","F"]];
+
+/* ---------- dates ---------- */
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parse=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const dow=d=>(d.getDay()+6)%7; // Mon=0
+const monday=d=>{const x=new Date(d);x.setDate(x.getDate()-dow(x));x.setHours(0,0,0,0);return x};
+const today=new Date();today.setHours(0,0,0,0);
+
+let state={start:"2026-11-09",entries:[]};
+let viewPhase=null, viewTab=SESS[TODAY_MAP[dow(today)][0]]?TODAY_MAP[dow(today)][0]:"A";
+
+function weekNo(){const w=Math.floor((today-parse(state.start))/(7*864e5))+1;return w}
+function phaseIdx(){const w=weekNo();return w<=4?0:w<=8?1:2}
+
+/* ---------- render: static ---------- */
+function renderPhases(){
+  const p=phaseIdx(),w=weekNo();
+  $("#phases").innerHTML=PHASES.map((x,i)=>`<div class="phase${i===p?" on":""}"><span class="wk">${x.wk}${i===p?" · you are here":""}</span><h3>${x.name}</h3><p>${x.d}</p></div>`).join("");
+  $("#startDate").value=state.start;
+  $("#weekNow").textContent=w<1?`Starts in ${Math.ceil((parse(state.start)-today)/864e5)} days`:w>12?`Week ${w}: past week 12, so start a new block or repeat Return`:`This is week ${w} of 12`;
+  const steps=Math.min(10000,6000+Math.floor(Math.max(0,w-1)/2)*1000);
+  $("#steps").textContent=steps.toLocaleString();
+}
+function renderWeek(){
+  const t=dow(today);
+  $("#week").innerHTML=WEEK.map((blks,i)=>`<div class="day${i===t?" today":""}"><div class="day-name">${DAYS[i]}${i===t?"<small>Today</small>":""}</div>${blks.map(b=>`<div class="blk ${b[0]}"><b>${b[1]}</b>${b[2]}</div>`).join("")}</div>`).join("");
+}
+function renderBoard(){
+  const t=dow(today),keys=TODAY_MAP[t],main=SESS[keys[0]],p=phaseIdx();
+  $("#boardEyebrow").textContent=`Today · ${today.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}`;
+  $("#boardTitle").textContent=main.title;
+  $("#boardWhen").textContent=WEEK[t].filter(b=>b[0]==="train"||b[0]==="hoop").map(b=>`${b[1]} ${b[2]}`).join(" · ");
+  $("#boardList").innerHTML=main.ex.slice(0,4).map(e=>`<li>${e[0]} <span class="num">${e[1+p]}</span></li>`).join("")+(main.ex.length>4?`<li>+ ${main.ex.length-4} more below</li>`:"");
+  const done=state.entries.some(e=>e.date===iso(today)&&e.session!=="Weigh-in only");
+  $("#boardPills").innerHTML=`<span class="pill">${PHASES[p].name} phase</span><span class="pill ghost">${done?"Logged today ✓":"Not logged yet"}</span>`;
+}
+function renderTabs(){
+  $("#tabs").innerHTML=Object.entries(SESS).map(([k,s])=>`<button class="tab" role="tab" id="tab-${k}" aria-selected="${k===viewTab}" data-k="${k}">${s.tab}</button>`).join("");
+  const p=viewPhase??phaseIdx();
+  $("#phasePick").innerHTML=`<span>Showing phase</span>`+PHASES.map((x,i)=>`<button type="button" id="pp-${i}" aria-pressed="${i===p}" data-p="${i}">${i+1} · ${x.name}</button>`).join("");
+  const s=SESS[viewTab];
+  $("#session").innerHTML=`<div class="session" role="tabpanel" aria-labelledby="tab-${viewTab}"><div class="session-top"><div><h3>${s.title}</h3><span class="eyebrow">${s.sub}</span></div><p>${s.intro}</p></div>${s.ex.map((e,i)=>`<div class="ex"><span class="n num">${pad(i+1)}</span><span class="name">${e[0]}</span><span class="rx num">${e[1+p]}</span><span class="note">${e[4]}</span></div>`).join("")}${s.foot?`<div class="session-foot">${s.foot}</div>`:""}</div>`;
+}
+const painColor=v=>v<=3?"var(--ok)":v<=5?"var(--warn)":"var(--bad)";
+$("#scale").innerHTML=Array.from({length:11},(_,i)=>`<div style="background:${painColor(i)}">${i}</div>`).join("");
+
+/* ---------- log ---------- */
+let pain=null;
+$("#painPick").innerHTML=Array.from({length:11},(_,i)=>`<button type="button" id="pain-${i}" aria-pressed="false" data-v="${i}">${i}</button>`).join("");
+$("#painPick").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;pain=+b.dataset.v;document.querySelectorAll("#painPick button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+$("#logDate").value=iso(today);
+$("#logSession").value=["Strength A","Basketball","Strength B","Walk / bike","Basketball","Strength C + conditioning","Walk / bike"][dow(today)];
+
+function renderLog(){
+  const es=[...state.entries].sort((a,b)=>b.date.localeCompare(a.date)||(b.ts||0)-(a.ts||0));
+  const mon=monday(today);
+  const active=new Set(es.filter(e=>e.session!=="Weigh-in only").map(e=>e.date));
+  let cnt=0;
+  $("#dots").innerHTML=DAYS.map((d,i)=>{const x=new Date(mon);x.setDate(x.getDate()+i);const hit=active.has(iso(x));if(hit)cnt++;return `<div class="dot${hit?" hit":""}${i===dow(today)?" now":""}"><i></i><span>${d}</span></div>`}).join("");
+  $("#sWeek").textContent=`${cnt}/7`;
+  const ws=es.filter(e=>typeof e.weight==="number").sort((a,b)=>a.date.localeCompare(b.date));
+  const latest=ws.length?ws[ws.length-1].weight:250, delta=+(latest-250).toFixed(1);
+  $("#sWeight").textContent=latest;
+  $("#sWeightD").textContent=ws.length?`${delta<=0?"":"+"}${delta} lb from 250`:"start: 250 lb";
+  const ps=es.filter(e=>typeof e.pain==="number").slice(0,7);
+  $("#sKnee").textContent=ps.length?(ps.reduce((a,e)=>a+e.pain,0)/ps.length).toFixed(1):"–";
+  const ul=$("#entries");ul.innerHTML="";
+  if(!es.length){ul.innerHTML=`<li class="empty" style="display:block">No check-ins yet. Log today's session on the left, even if it was only the floor routine.</li>`}
+  es.slice(0,12).forEach(e=>{
+    const li=document.createElement("li");
+    const d=document.createElement("span");d.className="d";d.textContent=parse(e.date).toLocaleDateString(undefined,{month:"short",day:"numeric"});
+    const w=document.createElement("span");w.className="what";w.textContent=e.session;
+    if(typeof e.pain==="number"){const k=document.createElement("span");k.className="kp";k.style.background=painColor(e.pain);k.textContent="knee "+e.pain;w.appendChild(k)}
+    const extra=[typeof e.weight==="number"?e.weight+" lb":"",e.note||""].filter(Boolean).join(" · ");
+    if(extra){const s=document.createElement("small");s.textContent=extra;w.appendChild(s)}
+    const x=document.createElement("button");x.className="x";x.type="button";x.textContent="Delete";x.setAttribute("aria-label","Delete check-in from "+d.textContent);
+    x.addEventListener("click",()=>store.remove(e.id));
+    li.append(d,w,x);ul.appendChild(li);
+  });
+}
+function renderAll(){renderPhases();renderWeek();renderBoard();renderTabs();renderLog()}
+
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(!b)return;viewTab=b.dataset.k;renderTabs()});
+$("#phasePick").addEventListener("click",e=>{const b=e.target.closest("[data-p]");if(!b)return;viewPhase=+b.dataset.p;renderTabs()});
+$("#startDate").addEventListener("change",e=>{if(!e.target.value)return;state.start=e.target.value;viewPhase=null;store.setStart(state.start);renderAll()});
+
+$("#logForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const date=$("#logDate").value,wRaw=$("#logWeight").value,session=$("#logSession").value;
+  if(!date){$("#status").textContent="Pick a date for this check-in.";return}
+  const weight=wRaw===""?null:Number(wRaw);
+  if(weight!==null&&(isNaN(weight)||weight<100||weight>400)){$("#status").textContent="Enter weight in pounds between 100 and 400, or leave it blank.";return}
+  const entry={kind:"entry",date,session,ts:Date.now()};
+  if(weight!==null)entry.weight=weight;
+  if(pain!==null)entry.pain=pain;
+  const note=$("#logNote").value.trim();if(note)entry.note=note;
+  try{await store.add(entry);$("#status").textContent=pain!==null&&pain>=6?"Saved. Knee is in the red, so take tomorrow easy and use the easier versions.":"Saved. Good work.";
+    $("#logWeight").value="";$("#logNote").value="";pain=null;document.querySelectorAll("#painPick button").forEach(x=>x.setAttribute("aria-pressed","false"));
+  }catch(err){$("#status").textContent="Couldn't save that check-in. Check your connection and try again."}
+});
+
+/* ---------- storage: private db rows, else this browser ---------- */
+const LS="resurgence-v1";
+const local={
+  load(){try{const d=JSON.parse(localStorage.getItem(LS)||"null");if(d){state.start=d.start||state.start;state.entries=d.entries||[]}}catch(_){}},
+  save(){try{localStorage.setItem(LS,JSON.stringify(state))}catch(_){}},
+  async add(e){e.id="l"+e.ts;state.entries.push(e);this.save();renderAll()},
+  async remove(id){state.entries=state.entries.filter(x=>x.id!==id);this.save();renderAll()},
+  async setStart(){this.save()}
+};
+let store=local;
+local.load();
+renderAll();
+
+(async()=>{
+  try{
+    if(!window.claude||!window.claude.use)return;
+    const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
+    if(!db||!user)return;
+    const uid=await user.id();
+    if(!uid)return;
+    const col=db.collection("data/users/"+uid);
+    store={
+      async add(e){await col.add(e)},
+      async remove(id){try{await col.doc(id).delete()}catch(_){$("#status").textContent="Couldn't delete that check-in. Try again."}},
+      async setStart(s){try{await col.doc("settings").set({kind:"settings",start:s})}catch(_){}}
+    };
+    col.onSnapshot(snap=>{
+      const entries=[];let start=null;
+      snap.docs.forEach(d=>{const v=d.data()||{};if(v.kind==="settings")start=v.start;else if(v.kind==="entry")entries.push({...v,id:d.id})});
+      state.entries=entries;if(start)state.start=start;
+      renderAll();
+    },()=>{$("#status").textContent="Lost the connection to your saved log. Reload the page to reconnect."});
+  }catch(_){}
+})();
+})();
+</script>
+</body>
+</html>
